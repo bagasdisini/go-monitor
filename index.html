@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Health Monitoring</title>
+</head>
+<body>
+<h2>Health Monitoring</h2>
+<form id="uploadForm" method="post">
+    Please provide valid URL:
+    <input type="text" name="url" id="url">
+    <input type="submit" value="Submit" name="submit">
+</form>
+<ul id="messages"></ul>
+
+<script>
+    document.getElementById('uploadForm').onsubmit = function(event) {
+        event.preventDefault();
+        const urlInput = document.getElementById('url');
+        const url = urlInput.value.trim();
+        if (url) {
+            fetch('/api/monitor/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `url=${encodeURIComponent(url)}`
+            }).then(() => {
+                urlInput.value = '';
+            });
+        }
+    };
+
+    const messages = document.getElementById('messages');
+    const urlMap = new Map();
+
+    function updateList(url, status) {
+        let listItem = urlMap.get(url);
+        if (!listItem) {
+            listItem = document.createElement('li');
+            urlMap.set(url, listItem);
+            messages.appendChild(listItem);
+        }
+        listItem.textContent = `${url} is ${status.status}, response time: ${status.latency}ms`;
+    }
+
+    const ws = new WebSocket('ws://localhost:8080/ws');
+
+    ws.onmessage = function(event) {
+        const message = JSON.parse(event.data);
+        updateList(message.url, message);
+    };
+
+    setInterval(() => {
+        urlMap.clear();
+        messages.innerHTML = '';
+    }, 3600000);
+</script>
+</body>
+</html>
