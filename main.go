@@ -1,12 +1,16 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"go-monitor/internal/monitor"
 	"go-monitor/internal/websocket"
 	"net/http"
 	"time"
 )
+
+//go:embed index.html
+var content embed.FS
 
 func main() {
 	http.HandleFunc("/", serveHome)
@@ -20,7 +24,13 @@ func main() {
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "index.html")
+	data, err := content.ReadFile("index.html")
+	if err != nil {
+		http.Error(w, "Could not read index.html", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(data)
 }
 
 func HandleURLSubmission(w http.ResponseWriter, r *http.Request) {
