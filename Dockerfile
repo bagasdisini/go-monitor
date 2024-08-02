@@ -1,5 +1,5 @@
 # Step #1
-FROM golang:1.22 as firststage
+FROM golang:1.22 AS firststage
 LABEL description="Go Monitor"
 LABEL maintainer="Bagas <mbagas221@gmail.com>"
 WORKDIR /build/
